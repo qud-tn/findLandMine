@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import './App.css';
 
 function Welcome() {
@@ -43,7 +43,6 @@ function ChoiceMode({ mode, setMode, onStart }) {
 }
 
 function ModeCheck({ mode }) {
-
 	const selectedMode = mode;
 
 	return (
@@ -59,17 +58,35 @@ function ModeCheck({ mode }) {
 	);
 }
 
-function GameBoard({ game, checkClicked, clicked }) {
+function GameBoard({ game, clicked, option, setClicked, optionArray, setOptionArray }) {
+
 	const cellStyle = {
 		width: '20px', // 셀 가로 크기
 		height: '20px', // 셀 세로 크기
 		border: '1px solid black', // 셀 테두리 스타일 (옵션)
 	};
 
+	const putOption = (xIndex, yIndex) => {
+		const newOptionArray = [...optionArray];
+		console.log('옵션', option);
+		console.log({ optionArray });
+		newOptionArray[xIndex] = newOptionArray[xIndex] || [];
+		newOptionArray[xIndex][yIndex] = option;
+		setOptionArray(newOptionArray);
+	};
+
+	const checkClicked = (xIndex, yIndex) => {
+		const newClicked = [...clicked];
+		console.log('좌표:', xIndex, yIndex, '클릭 됨');
+		console.log({ clicked });
+		newClicked[xIndex] = newClicked[xIndex] || [];
+		newClicked[xIndex][yIndex] = game[xIndex][yIndex];
+		setClicked(newClicked);
+	};
+
 	const handleButtonClick = (xIndex, yIndex) => {
-		if (clicked[xIndex] && !clicked[xIndex][yIndex]?.clicked) {
-			checkClicked(xIndex, yIndex);
-		}
+		checkClicked(xIndex, yIndex);
+		putOption(xIndex, yIndex);
 	};
 
 	return (
@@ -83,7 +100,7 @@ function GameBoard({ game, checkClicked, clicked }) {
 									<td key={yIndex} style={cellStyle}>
 										<button
 											onClick={() => handleButtonClick(xIndex, yIndex)}
-											className={`button-${clicked[xIndex][yIndex]}`}
+											className={`button-${optionArray[xIndex][yIndex]}`}
 										>
 											{clicked[xIndex][yIndex]}
 										</button>
@@ -100,17 +117,6 @@ function GameBoard({ game, checkClicked, clicked }) {
 	);
 }
 
-function getColor(value) {
-	switch (value) {
-		case 0:
-			return '#81c147';
-		case 1:
-			return '#0080ff';
-		case 2:
-			return '#edacb1';
-	}
-}
-
 function ClickOption({ setOption }) {
 	const handleClickOption = (event) => {
 		setOption(Number(event.target.value));
@@ -118,9 +124,9 @@ function ClickOption({ setOption }) {
 
 	return (
 		<div>
-			<input type="radio" value="0" name="clickOption" onChange={handleClickOption} />되돌리기(0)
-			<input type="radio" value="1" name="clickOption" onChange={handleClickOption} />확정(1)
-			<input type="radio" value="2" name="clickOption" onChange={handleClickOption} />의심(2)
+			<div className='div-0'><input type="radio" value="0" name="clickOption" onChange={handleClickOption} />일반</div>
+			<div className='div-1'><input type="radio" value="1" name="clickOption" onChange={handleClickOption} />확정</div>
+			<div className='div-2'><input type="radio" value="2" name="clickOption" onChange={handleClickOption} />의심</div>
 			<br />
 		</div>
 	);
@@ -130,21 +136,27 @@ function App() {
 	const [mode, setMode] = useState(null);
 	const [game, setGame] = useState(null);
 	const [clicked, setClicked] = useState([]);
-	const [option, setOption] = useState(1);
+	const [option, setOption] = useState(0);
+	const [optionArray, setOptionArray] = useState([]);
 
 	const handleGameStart = (game) => {
 		setGame(game);
 
-		const initialClicked = Array.from({ length: game.length }, () => Array(game[0].length).fill(0));
+		const initialClicked = Array.from({ length: game.length }, () =>
+			Array.from({ length: game[0].length }, () => 0));
 		setClicked(initialClicked);
+
+		const initialOptionArray = Array.from({ length: game.length }, () =>
+			Array.from({ length: game[0].length }, () => 3));
+		setOptionArray(initialOptionArray);
 	};
 
 	const checkClicked = (xIndex, yIndex) => {
 		const newClicked = [...clicked];
-		console.log('좌표:', xIndex, yIndex, '클릭 됨', '옵션:', option);
+		console.log('좌표:', xIndex, yIndex, '클릭 됨');
 		console.log({ clicked });
 		newClicked[xIndex] = newClicked[xIndex] || [];
-		newClicked[xIndex][yIndex] = option;
+		newClicked[xIndex][yIndex] = game[xIndex][yIndex];
 		setClicked(newClicked);
 	};
 
@@ -153,7 +165,7 @@ function App() {
 			<Welcome />
 			<ChoiceMode mode={mode} setMode={setMode} onStart={handleGameStart} />
 			<ModeCheck mode={mode} />
-			{game && <GameBoard game={game} checkClicked={checkClicked} clicked={clicked} option={option} />}
+			{game && <GameBoard game={game} checkClicked={checkClicked} clicked={clicked} optionArray={optionArray} setOptionArray={setOptionArray} option={option} setClicked={setClicked} />}
 			{game && <ClickOption setOption={setOption} />}
 		</div>
 	);
