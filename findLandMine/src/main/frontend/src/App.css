@@ -2,12 +2,9 @@
   text-align: center;
 }
 
-.button-3 {
-    background-color: rgb(255, 255, 128);
-}
 
 .button-0 {
-    background-color: #81c147;
+    background-color: rgb(255, 255, 128);
 }
 
 .button-1 {
@@ -18,14 +15,22 @@
     background-color: #edacb1;
 }
 
+.button-3 {
+    background-color: #81c147;
+}
+
+.button-4{
+	background-color: gray;
+}
+
 .table{
 	margin: auto;
 }
 
 .div-0{
 	display: inline-block;
-	background-color: #81c147;
-	border: 2px solid #81c147; 
+	background-color: rgb(255, 255, 128);
+	border: 2px solid rgb(255, 255, 128); 
 }
 .div-1{
 	display: inline-block;
@@ -36,4 +41,9 @@
 	display: inline-block;
 	background-color: #edacb1;
 	border: 2px solid #edacb1; 
+}
+.div-3{
+	display: inline-block;
+	background-color: #81c147;
+	border: 2px solid #81c147; 
 }

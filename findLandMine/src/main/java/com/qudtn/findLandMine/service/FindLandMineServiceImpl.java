@@ -1,19 +1,12 @@
 package com.qudtn.findLandMine.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import org.springframework.stereotype.Service;
 
-import com.qudtn.findLandMine.domain.GameManager;
 
 @Service
 public class FindLandMineServiceImpl implements FindLandMineService {
-
-	private GameManager gameManager = new GameManager();
 
 	@Override
 	public int[][] makeGame(String mode) {
@@ -65,15 +58,15 @@ public class FindLandMineServiceImpl implements FindLandMineService {
 	}
 	
 	@Override
-	public int[][] makeGameArray(int[][] landMineArray) {
+	public Object[][] makeGameArray(int[][] landMineArray) {
 	    int x= landMineArray.length;
 		int y= landMineArray[0].length;
-		int[][] gameArray = new int[x][y];
+		Object[][] gameArray = new Object[x][y];
 
 	    for (int i = 0; i < x; i++) {
 	        for (int j = 0; j < y; j++) {
 	            if (landMineArray[i][j] == 1) {
-	                gameArray[i][j] = -1;
+	                gameArray[i][j] = '◆';
 	            } else {
 	                gameArray[i][j] = countMine(i, j, landMineArray);
 	            }
@@ -88,7 +81,7 @@ public class FindLandMineServiceImpl implements FindLandMineService {
 	    for (int i = x - 1; i <= x + 1; i++) {
 	        for (int j = y - 1; j <= y + 1; j++) {
 	            if (i >= 0 && i < landMineArray.length && j >= 0 && j < landMineArray[0].length) {
-	                if (landMineArray[i][j] == 1) {
+	                if ((int)landMineArray[i][j] == 1) {
 	                    count++;
 	                }
 	            }
