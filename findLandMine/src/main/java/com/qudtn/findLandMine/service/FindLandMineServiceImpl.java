@@ -4,7 +4,6 @@ import java.util.Random;
 
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class FindLandMineServiceImpl implements FindLandMineService {
 
@@ -56,39 +55,58 @@ public class FindLandMineServiceImpl implements FindLandMineService {
 		}
 		return landMineArray;
 	}
-	
+
 	@Override
 	public Object[][] makeGameArray(int[][] landMineArray) {
-	    int x= landMineArray.length;
-		int y= landMineArray[0].length;
+		int x = landMineArray.length;
+		int y = landMineArray[0].length;
 		Object[][] gameArray = new Object[x][y];
 
-	    for (int i = 0; i < x; i++) {
-	        for (int j = 0; j < y; j++) {
-	            if (landMineArray[i][j] == 1) {
-	                gameArray[i][j] = '◆';
-	            } else {
-	                gameArray[i][j] = countMine(i, j, landMineArray);
-	            }
-	        }
-	    }
+		for (int i = 0; i < x; i++) {
+			for (int j = 0; j < y; j++) {
+				if (landMineArray[i][j] == 1) {
+					gameArray[i][j] = '◆';
+				} else {
+					gameArray[i][j] = countMine(i, j, landMineArray);
+				}
+			}
+		}
 
-	    return gameArray;
+		return gameArray;
 	}
 
 	private int countMine(int x, int y, int[][] landMineArray) {
-	    int count = 0;
-	    for (int i = x - 1; i <= x + 1; i++) {
-	        for (int j = y - 1; j <= y + 1; j++) {
-	            if (i >= 0 && i < landMineArray.length && j >= 0 && j < landMineArray[0].length) {
-	                if ((int)landMineArray[i][j] == 1) {
-	                    count++;
-	                }
-	            }
-	        }
-	    }
-	    return count;
+		int count = 0;
+		for (int i = x - 1; i <= x + 1; i++) {
+			for (int j = y - 1; j <= y + 1; j++) {
+				if (i >= 0 && i < landMineArray.length && j >= 0 && j < landMineArray[0].length) {
+					if ((int) landMineArray[i][j] == 1) {
+						count++;
+					}
+				}
+			}
+		}
+		return count;
 	}
 
+	@Override
+	public boolean compareArrays(Object[][] originArray, String gameArray) {
+		StringBuilder sb = new StringBuilder();
+		
+		for (int i = 0; i < originArray.length; i++) {
+			for (int j = 0; j < originArray[0].length; j++) {
+				sb.append(originArray[i][j]);
+				sb.append(",");
+			}
+		}
+		sb.deleteCharAt(sb.length()-1);
+		String StrOriginArray = sb.toString();
+		
+		if (StrOriginArray.equals(gameArray)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 }

@@ -10,21 +10,15 @@ function Welcome() {
 	);
 }
 
-function ChoiceMode({ mode, setMode, onStart, setOption, setCount }) {
-
-	const resetState = () => {
-		setOption(1);
-		setCount(0);
-	}
+function ChoiceMode({ mode, setMode, onStart }) {
 
 	const handleModeChange = (event) => {
 		setMode(event.target.value);
-		resetState();
 	};
 
 	const handleStart = () => {
 		if (mode !== null) {
-			axios.post('/game/start', { mode })
+			axios.post(`/game/start?mode=${mode}`, { mode })
 				.then((response) => {
 					console.log(response.data);
 					onStart(response.data);
@@ -62,7 +56,8 @@ function ModeCheck({ mode }) {
 	);
 }
 
-function GameBoard({ clicked, setClicked, game, optionArray, setOptionArray, setOption, option }) {
+function GameBoard({ clicked, setClicked, game, optionArray, setOptionArray, setOption, option, visited, setVisited }) {
+
 
 	const cellStyle = {
 		width: '20px',
@@ -72,8 +67,8 @@ function GameBoard({ clicked, setClicked, game, optionArray, setOptionArray, set
 
 	const putOption = (xIndex, yIndex) => {
 		const newOptionArray = [...optionArray];
-		console.log('옵션', option);
-		console.log({ optionArray });
+		//		console.log('옵션', option);
+		//		console.log({ optionArray });
 		newOptionArray[xIndex] = newOptionArray[xIndex] || [];
 		newOptionArray[xIndex][yIndex] = option;
 		setOptionArray(newOptionArray);
@@ -81,16 +76,30 @@ function GameBoard({ clicked, setClicked, game, optionArray, setOptionArray, set
 
 	const checkClicked = (xIndex, yIndex) => {
 		const newClicked = [...clicked];
-		console.log('좌표:', xIndex, yIndex, '클릭 됨');
-		console.log({ clicked });
+		//		console.log('좌표:', xIndex, yIndex, '클릭 됨');
+		//		console.log({ clicked });
 		newClicked[xIndex] = newClicked[xIndex] || [];
 		newClicked[xIndex][yIndex] = game[xIndex][yIndex];
 		setClicked(newClicked);
 	};
 
+	const turnVisited = (xIndex, yIndex) => {
+		const newVisited = [...visited];
+		//		console.log('좌표:', xIndex, yIndex, '클릭 됨');
+		//		console.log({ clicked });
+		newVisited[xIndex] = newVisited[xIndex] || [];
+		newVisited[xIndex][yIndex] = true;
+		setVisited(newVisited);
+	};
+
 	const handleButtonClick = (xIndex, yIndex) => {
 		checkClicked(xIndex, yIndex);
 		putOption(xIndex, yIndex);
+
+		if (option === 1 || (option === 3 && game[xIndex][yIndex] === '◆')) {
+			turnVisited(xIndex, yIndex);
+		}
+		//		console.log(visited);
 	};
 
 	const handleGamePlay = (xIndex, yIndex) => {
@@ -111,39 +120,34 @@ function GameBoard({ clicked, setClicked, game, optionArray, setOptionArray, set
 		}
 
 		const chainExplosion = (x, y, visited) => {
-			if (option === 1) {
-				for (let i = -1; i <= 1; i++) {
-					for (let j = -1; j <= 1; j++) {
-						const newX = x + i;
-						const newY = y + j;
+			for (let i = -1; i <= 1; i++) {
+				for (let j = -1; j <= 1; j++) {
+					const newX = x + i;
+					const newY = y + j;
 
-						if (i === 0 && j === 0) continue;
+					if (i === 0 && j === 0) continue;
 
-						if (checkRange(newX, newY) && game[newX][newY] === 0) {
-							if (!visited[newX][newY]) {
-								visited[newX][newY] = true;
-								handleButtonClick(newX, newY);
-								chainExplosion(newX, newY, visited);
-							}
-						} else if (checkRange(newX, newY)) {
+					if (checkRange(newX, newY) && game[newX][newY] === 0) {
+						if (!visited[newX][newY]) {
 							handleButtonClick(newX, newY);
-						}
 
-						if (visited.every(row => row.every(cell => cell === true))) {
-							alert("축하합니다! 게임을 클리어 하셨습니다.");
-							setOption(5);
+							chainExplosion(newX, newY, visited);
 						}
+					} else if (checkRange(newX, newY)) {
+						handleButtonClick(newX, newY);
 					}
 				}
 			}
 		};
 
-		if (checkRange(xIndex, yIndex) && game[xIndex][yIndex] === 0 && option!==2) {
-			const visited = Array.from({ length: game.length }, () => Array(game[0].length).fill(false));
+		if (visited.every(row => row.every(cell => cell === true))) {
+			alert("축하합니다! 게임을 클리어 하셨습니다.");
+			setOption(5);
+		}
+
+		if (checkRange(xIndex, yIndex) && game[xIndex][yIndex] === 0 && option === 1) {
 
 			handleButtonClick(xIndex, yIndex);
-			
-			visited[xIndex][yIndex] = true;
 
 			chainExplosion(xIndex, yIndex, visited);
 
@@ -165,7 +169,7 @@ function GameBoard({ clicked, setClicked, game, optionArray, setOptionArray, set
 										<button
 											onClick={() => handleGamePlay(xIndex, yIndex)}
 											className={`button-${optionArray[xIndex][yIndex]}`}
-											disabled={option === 4}
+											disabled={option === 4 || option === 5}
 										>
 											{optionArray[xIndex][yIndex] === 3 ? '√'
 												: optionArray[xIndex][yIndex] === 2 ? '?'
@@ -201,7 +205,7 @@ function Timer({ option, count, setCount }) {
 	useEffect(() => {
 		let timer;
 
-		if (option !== 4) {
+		if (option !== 4 && option !== 5) {
 			timer = setInterval(() => {
 				setCount((prevCount) => prevCount + 1);
 			}, 10); // 0.01초 단위로 증가
@@ -223,6 +227,89 @@ function Timer({ option, count, setCount }) {
 	);
 }
 
+function Save({ game, mode, count }) {
+	const [id, setId] = useState('');
+
+	const changeId = (event) => {
+		setId(event.target.value);
+	};
+
+	const handleSave = () => {
+		if (mode !== null) {
+			axios.post(`/game/id/${id}?game=${game}&mode=${mode}&count=${count}`, { game, mode, count, id })
+				.then((response) => {
+					console.log(response.data);
+
+					const storedRank = localStorage.getItem('rank');
+					const existingRank = storedRank ? JSON.parse(storedRank) : [];
+
+					const thisRank = response.data;
+
+					existingRank.push(thisRank);
+
+					const modifiedRank = JSON.stringify(existingRank);
+
+					localStorage.setItem('rank', modifiedRank);
+				})
+				.catch((error) => {
+					console.error('Error:', error);
+				});
+		}
+	};
+
+	return (
+		<div>
+			<input type="text" onChange={changeId} placeholder='이름을 입력하세요' />
+			<input type="button" value="저장하기" onClick={handleSave} />
+			<p style={{ fontWeight: 'bold' }}>서버에 데이터를 직접 저장하지 않습니다. 로컬에만 저장됩니다</p>
+		</div>
+	);
+}
+
+function Top5(mode) {
+	const rank = JSON.parse(localStorage.getItem('rank'));
+	const rankArray = [rank];
+	const filteredRankArray = rankArray.filter((idx) => idx.mode === mode.mode);
+	const sortedRank = filteredRankArray.sort((a, b) => parseInt(a.count) - parseInt(b.count));
+	const formattedRank = (filteredRankArray.length > 0) ? sortedRank.slice(0, 5) : sortedRank;
+	//	console.log(mode.mode);
+	//	console.log(rankArray[0].mode);
+	//	console.log(formattedRank);
+
+	const formatTime = (time) => {
+		const minutes = Math.floor(time / 6000); // 1분 = 6000밀리초
+		const seconds = ((time % 6000) / 100).toFixed(2); // 초, 소수점 두 자리까지
+
+		return `${String(minutes).padStart(2, '0')}분${String(seconds).padStart(5, '0')}초`;
+	};
+
+	return (
+		<div>
+			{filteredRankArray.length > 0 && <table className='table'>
+				<tbody>
+					<tr>
+						<td>
+							이름
+						</td>
+						<td>
+							소요 시간
+						</td>
+					</tr>
+					{formattedRank.map((i, Index) => (
+						<tr key={Index}>
+							<td>
+								{i.id}
+							</td>
+							<td>
+								{formatTime(i.count)}
+							</td>
+						</tr>
+					))}
+				</tbody>
+			</table>}
+		</div>
+	);
+}
 
 function App() {
 	const [mode, setMode] = useState(null);
@@ -231,6 +318,8 @@ function App() {
 	const [optionArray, setOptionArray] = useState([]);
 	const [option, setOption] = useState(1);
 	const [count, setCount] = useState(0);
+	const [visited, setVisited] = useState([]);
+	const rank = JSON.parse(localStorage.getItem('rank'));
 
 	const handleGameStart = (data) => {
 		setGame(data);
@@ -242,16 +331,26 @@ function App() {
 		const initialOptionArray = Array.from({ length: data.length }, () =>
 			Array.from({ length: data[0].length }, () => 0));
 		setOptionArray(initialOptionArray);
+
+		setOption(1);
+		setCount(0);
+
+		const initialVisited = Array.from({ length: data.length }, () =>
+			Array.from({ length: data[0].length }, () => false));
+		setVisited(initialVisited);
 	};
+
 
 	return (
 		<div className="App">
 			<Welcome />
-			<ChoiceMode mode={mode} setMode={setMode} setOption={setOption} onStart={handleGameStart} setCount={setCount} />
+			<ChoiceMode mode={mode} setMode={setMode} onStart={handleGameStart} />
 			{mode && <ModeCheck mode={mode} />}
-			{game && <GameBoard clicked={clicked} setClicked={setClicked} game={game} optionArray={optionArray} setOptionArray={setOptionArray} setOption={setOption} option={option} />}
+			{game && <GameBoard clicked={clicked} setClicked={setClicked} game={game} optionArray={optionArray} setOptionArray={setOptionArray} setOption={setOption} option={option} visited={visited} setVisited={setVisited} />}
 			{game && <ClickOption setOption={setOption} />}
 			{game && <Timer option={option} count={count} setCount={setCount} />}
+			{option === 5 && <Save game={game} mode={mode} count={count} />}
+			{mode && rank.mode && <Top5 mode={mode} />}
 		</div>
 	);
 }
