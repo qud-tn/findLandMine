@@ -241,11 +241,18 @@ function Save({ game, mode, count }) {
 					console.log(response.data);
 
 					const storedRank = localStorage.getItem('rank');
-					const existingRank = storedRank ? JSON.parse(storedRank) : [];
+					let existingRank = Array.isArray(JSON.parse(storedRank)) ? JSON.parse(storedRank) : [];
 
 					const thisRank = response.data;
 
-					existingRank.push(thisRank);
+					if (existingRank.length !== 0) {
+						if (parseInt(existingRank[0].count) > parseInt(thisRank.count)) {
+							existingRank = { ...thisRank };
+							console.log(localStorage);
+						}
+					} else {
+						existingRank = { ...thisRank };
+					}
 
 					const modifiedRank = JSON.stringify(existingRank);
 
@@ -266,15 +273,13 @@ function Save({ game, mode, count }) {
 	);
 }
 
-function Top5(mode) {
-	const rank = JSON.parse(localStorage.getItem('rank'));
-	const rankArray = [rank];
+function Top1(mode) {
+	const rank = localStorage.length !== 0 ? JSON.parse(localStorage.getItem('rank')) : [];
+	const rankArray = rank;
 	const filteredRankArray = rankArray.filter((idx) => idx.mode === mode.mode);
-	const sortedRank = filteredRankArray.sort((a, b) => parseInt(a.count) - parseInt(b.count));
-	const formattedRank = (filteredRankArray.length > 0) ? sortedRank.slice(0, 5) : sortedRank;
-	//	console.log(mode.mode);
-	//	console.log(rankArray[0].mode);
-	//	console.log(formattedRank);
+	//		console.log(mode.mode);
+	//		console.log(localStorage);
+	//		console.log(rankArray[0].mode);
 
 	const formatTime = (time) => {
 		const minutes = Math.floor(time / 6000); // 1분 = 6000밀리초
@@ -288,6 +293,11 @@ function Top5(mode) {
 			{filteredRankArray.length > 0 && <table className='table'>
 				<tbody>
 					<tr>
+						<td colSpan="2">
+							최고기록
+						</td>
+					</tr>
+					<tr>
 						<td>
 							이름
 						</td>
@@ -295,7 +305,7 @@ function Top5(mode) {
 							소요 시간
 						</td>
 					</tr>
-					{formattedRank.map((i, Index) => (
+					{filteredRankArray.map((i, Index) => (
 						<tr key={Index}>
 							<td>
 								{i.id}
@@ -319,7 +329,6 @@ function App() {
 	const [option, setOption] = useState(1);
 	const [count, setCount] = useState(0);
 	const [visited, setVisited] = useState([]);
-	const rank = JSON.parse(localStorage.getItem('rank'));
 
 	const handleGameStart = (data) => {
 		setGame(data);
@@ -350,7 +359,7 @@ function App() {
 			{game && <ClickOption setOption={setOption} />}
 			{game && <Timer option={option} count={count} setCount={setCount} />}
 			{option === 5 && <Save game={game} mode={mode} count={count} />}
-			{mode && rank.mode && <Top5 mode={mode} />}
+			{mode && <Top1 mode={mode} />}
 		</div>
 	);
 }
