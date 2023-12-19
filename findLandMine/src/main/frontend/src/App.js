@@ -48,7 +48,7 @@ function ModeCheck({ mode }) {
 			{mode !== null && (
 				<p>{mode}으로 선택되었습니다.
 					지뢰 개수 :
-					{mode === "초급" && " 9"}
+					{mode === "초급" && " 10"}
 					{mode === "중급" && " 40"}
 					{mode === "고급" && " 99"}
 				</p>)}
@@ -241,14 +241,17 @@ function Save({ game, mode, count }) {
 					console.log(response.data);
 
 					const storedRank = localStorage.getItem('rank');
-					let existingRank = Array.isArray(JSON.parse(storedRank)) ? JSON.parse(storedRank) : [];
+					let existingRank = storedRank ? JSON.parse(storedRank) : null;
 
 					const thisRank = response.data;
 
-					if (existingRank.length !== 0) {
-						if (parseInt(existingRank[0].count) > parseInt(thisRank.count)) {
+					if (existingRank) {
+						//						console.log(existingRank.count);
+						//						console.log(thisRank.count);
+						console.log(existingRank.count - thisRank.count);
+						if (parseInt(existingRank.count) > parseInt(thisRank.count)) {
 							existingRank = { ...thisRank };
-							console.log(localStorage);
+							//							console.log(localStorage);
 						}
 					} else {
 						existingRank = { ...thisRank };
@@ -275,7 +278,7 @@ function Save({ game, mode, count }) {
 
 function Top1(mode) {
 	const rank = localStorage.length !== 0 ? JSON.parse(localStorage.getItem('rank')) : [];
-	const rankArray = rank;
+	const rankArray = [rank];
 	const filteredRankArray = rankArray.filter((idx) => idx.mode === mode.mode);
 	//		console.log(mode.mode);
 	//		console.log(localStorage);
